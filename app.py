@@ -24,6 +24,34 @@ st.markdown("""
     border: 1px solid #dce5ef; min-height: 150px;
 }
 .small { color: #526579; font-size: .9rem; }
+/* Fix text visibility */
+html, body, [data-testid="stApp"], .stApp {
+    color: #1f2937 !important;
+}
+
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stWidgetLabel"] p,
+[data-testid="stHeader"] {
+    color: #1f2937 !important;
+    opacity: 1 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #111827 !important;
+    opacity: 1 !important;
+}
+
+[data-testid="stCaptionContainer"] {
+    color: #4b5563 !important;
+    opacity: 1 !important;
+}
+
+input, textarea {
+    color: #111827 !important;
+    background-color: #ffffff !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
