@@ -277,7 +277,7 @@ components.html(
     </body>
     </html>
     """,
-    height=340,
+    height=390,
     scrolling=False
 )
 
