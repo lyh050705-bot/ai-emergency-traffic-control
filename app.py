@@ -266,52 +266,28 @@ warning_active = st.toggle(
 )
 
 if warning_active:
-    light_style = """
-        background:#facc15;
-        animation: roadside_flash 0.8s infinite;
-        box-shadow:0 0 22px #facc15;
-    """
-    status_text = "WARNING ACTIVE — SLOW DOWN"
+    st.warning("⚠️ HAZARD DETECTED — SLOW DOWN")
+    st.markdown("### 🟡 AMBER WARNING LIGHT: ACTIVE")
+    st.caption("Concept simulation: the roadside beacon is activated.")
 else:
-    light_style = "background:#6b7280;"
-    status_text = "STANDBY — NO HAZARD SIMULATED"
+    st.info("Roadside warning system is on standby.")
+    st.markdown("### ⚫ AMBER WARNING LIGHT: OFF")
+    st.caption("No hazard is being simulated.")
 
-st.markdown(
-    f"""
-    <style>
-    @keyframes roadside_flash {{
-        0%, 49% {{ background:#facc15; box-shadow:0 0 22px #facc15; }}
-        50%, 100% {{ background:#78350f; box-shadow:none; }}
-    }}
-    </style>
-
-    <div style="background:#303844;color:white;padding:24px;
-                border-radius:14px;text-align:center;">
-        <h3 style="color:white;">ROADSIDE AMBER WARNING UNIT</h3>
-
-        <div style="width:32px;height:32px;border-radius:50%;
-                    border:3px solid #fef3c7;margin:18px auto 0;
-                    {light_style}"></div>
-
-        <div style="width:12px;height:55px;background:#d1d5db;
-                    margin:auto;"></div>
-
-        <div style="width:60px;height:12px;background:#9ca3af;
-                    margin:auto;border-radius:4px;"></div>
-
-        <hr style="border:1px dashed white;margin-top:22px;">
-
-        <h4 style="color:white;">{status_text}</h4>
-
-        <div style="font-size:12px;">
-            PHYSICAL DEVICE CONCEPT — SIMULATED
-        </div>
-    </div>
+st.markdown("#### Physical device concept")
+st.code(
+    """
+       [ AMBER BEACON ]
+              |
+              |
+           [ POST ]
+              |
+        [ MOUNTING BASE ]
     """,
-    unsafe_allow_html=True
+    language=None
 )
 
 st.caption(
     "Future development: connect a roadside sensor or vehicle-detection "
-    "system to a real amber warning beacon."
+    "system to a real amber LED beacon. This is a software simulation."
 )
