@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from PIL import Image
-from inference_sdk import InferenceHTTPClient, InferenceConfiguration
+from inference_sdk import InferenceHTTPClient
 
 st.set_page_config(
     page_title="AI Emergency Traffic Control",
