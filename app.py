@@ -251,12 +251,14 @@ st.divider()
 st.caption("AI Emergency Traffic Control · Hackathon prototype · Image-based inference only")
 # ---------------- PHYSICAL ROADSIDE WARNING LIGHT ----------------
 
+import streamlit.components.v1 as components
+
 st.divider()
 st.subheader("🚨 Physical Roadside Warning-Light System")
 
 st.write(
-    "Concept: a roadside sensor detects a stopped vehicle or road hazard "
-    "and activates a flashing amber beacon to warn approaching drivers."
+    "A roadside sensor could detect a stopped vehicle or road hazard "
+    "and activate an amber beacon to warn approaching drivers."
 )
 
 warning_active = st.toggle(
@@ -266,28 +268,90 @@ warning_active = st.toggle(
 )
 
 if warning_active:
-    st.warning("⚠️ HAZARD DETECTED — SLOW DOWN")
-    st.markdown("### 🟡 AMBER WARNING LIGHT: ACTIVE")
-    st.caption("Concept simulation: the roadside beacon is activated.")
+    light_color = "#ffb000"
+    animation = "blink 0.7s infinite"
+    status = "WARNING ACTIVE — SLOW DOWN"
 else:
-    st.info("Roadside warning system is on standby.")
-    st.markdown("### ⚫ AMBER WARNING LIGHT: OFF")
-    st.caption("No hazard is being simulated.")
+    light_color = "#555b65"
+    animation = "none"
+    status = "STANDBY — NO HAZARD SIMULATED"
 
-st.markdown("#### Physical device concept")
-st.code(
-    """
-       [ AMBER BEACON ]
-              |
-              |
-           [ POST ]
-              |
-        [ MOUNTING BASE ]
+components.html(
+    f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body {{
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: transparent;
+        }}
+        .scene {{
+            background: #303844;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            color: white;
+        }}
+        .beacon {{
+            width: 38px;
+            height: 38px;
+            margin: 20px auto 0;
+            border-radius: 50%;
+            background: {light_color};
+            box-shadow: 0 0 20px {light_color};
+            animation: {animation};
+            border: 3px solid #fff0bd;
+        }}
+        .post {{
+            width: 12px;
+            height: 65px;
+            background: #d1d5db;
+            margin: auto;
+        }}
+        .base {{
+            width: 66px;
+            height: 12px;
+            background: #9ca3af;
+            margin: auto;
+            border-radius: 3px;
+        }}
+        .road {{
+            margin-top: 22px;
+            border-top: 3px dashed white;
+            padding-top: 16px;
+            font-size: 25px;
+        }}
+        .status {{
+            margin-top: 18px;
+            font-weight: bold;
+            font-size: 18px;
+        }}
+        @keyframes blink {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.2; }}
+        }}
+    </style>
+    </head>
+    <body>
+        <div class="scene">
+            <div>ROADSIDE AMBER WARNING UNIT</div>
+            <div class="beacon"></div>
+            <div class="post"></div>
+            <div class="base"></div>
+            <div class="road">🚗　🚙　🚕</div>
+            <div class="status">{status}</div>
+            <p>PHYSICAL DEVICE CONCEPT — SIMULATED</p>
+        </div>
+    </body>
+    </html>
     """,
-    language=None
+    height=340,
+    scrolling=False
 )
 
 st.caption(
-    "Future development: connect a roadside sensor or vehicle-detection "
-    "system to a real amber LED beacon. This is a software simulation."
+    "This is a visual simulation only. A real implementation would "
+    "require a roadside sensor, controller, and physical amber beacon."
 )
