@@ -65,6 +65,62 @@ h1, h2, h3, h4 {
     -webkit-text-fill-color: #111827 !important;
     opacity: 1 !important;
 }
+/* Physical roadside warning beacon */
+@keyframes roadside-flash {
+    0%, 49% {
+        background-color: #facc15;
+        box-shadow: 0 0 22px #facc15;
+        opacity: 1;
+    }
+    50%, 100% {
+        background-color: #78350f;
+        box-shadow: none;
+        opacity: 0.55;
+    }
+}
+
+.roadside-beacon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid #fef3c7;
+    display: inline-block;
+    animation: roadside-flash 0.8s infinite;
+}
+
+.roadside-scene {
+    background: #303844;
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 22px;
+    text-align: center;
+}
+
+.roadside-scene h3,
+.roadside-scene p {
+    color: #ffffff !important;
+}
+
+.roadside-post {
+    width: 12px;
+    height: 55px;
+    background: #d1d5db;
+    margin: 8px auto;
+    border-radius: 3px;
+}
+
+.roadside-base {
+    width: 60px;
+    height: 12px;
+    background: #9ca3af;
+    margin: auto;
+    border-radius: 4px;
+}
+
+.roadside-lane {
+    border-top: 3px dashed #f9fafb;
+    margin: 18px 0;
+}y
 </style>
 """, unsafe_allow_html=True)
 
@@ -188,6 +244,54 @@ if uploaded:
               <p class="small">Run detection to update the simulated signal and warning.</p>
             </div>
             """, unsafe_allow_html=True)
+            # Physical roadside warning-light concept
+
+st.markdown("## Physical Roadside Warning-Light System")
+
+st.write(
+    "A roadside sensor detects a stopped vehicle or road hazard "
+    "and activates a flashing amber beacon to warn approaching drivers."
+)
+
+warning_active = st.toggle(
+    "Simulate roadside hazard detected",
+    value=False,
+    key="roadside_warning_active"
+)
+
+if warning_active:
+    beacon = '<span class="roadside-beacon"></span>'
+    status = "WARNING ACTIVE — SLOW DOWN"
+else:
+    beacon = (
+        '<span style="display:inline-block;width:32px;height:32px;'
+        'border-radius:50%;background:#6b7280;'
+        'border:3px solid #d1d5db;"></span>'
+    )
+    status = "STANDBY — NO HAZARD SIMULATED"
+
+st.markdown(f"""
+<div class="roadside-scene">
+    <h3>⚠️ ROADSIDE WARNING UNIT</h3>
+    <div style="margin-top:20px;">
+        {beacon}
+    </div>
+    <div class="roadside-post"></div>
+    <div class="roadside-base"></div>
+    <div class="roadside-lane"></div>
+    <div style="font-size:18px;font-weight:bold;">
+        {status}
+    </div>
+    <div style="margin-top:12px;font-size:12px;">
+        PHYSICAL DEVICE CONCEPT — SIMULATED
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.caption(
+    "Future implementation: connect a roadside sensor or "
+    "stopped-vehicle detection model to a physical amber beacon."
+)
 else:
     st.markdown("Upload an image to begin. For the best demo, use a clear road image with or without an ambulance.")
 
