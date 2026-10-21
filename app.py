@@ -108,8 +108,8 @@ if uploaded:
                         "detected": detected,
                         "confidence": confidence,
                     }
-                except Exception as exc:
-                    st.error("Detection failed. Check your API key, workflow access, and package setup.")
+                except Exception as e:
+                    st.error(f"Detection failed: {type(e).__name__}: {e}")
                     import traceback
                     traceback.print_exc()
                     st.caption(f"Technical detail: {exc}")
