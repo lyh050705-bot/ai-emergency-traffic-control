@@ -249,6 +249,7 @@ else:
 
 st.divider()
 st.caption("AI Emergency Traffic Control · Hackathon prototype · Image-based inference only")
+
 # ---------------- PHYSICAL ROADSIDE WARNING LIGHT ----------------
 
 import streamlit.components.v1 as components
@@ -257,28 +258,25 @@ st.divider()
 st.subheader("🚨 Physical Roadside Warning-Light System")
 
 st.write(
-    "A roadside sensor could detect a stopped vehicle or road hazard "
-    "and activate an amber beacon to warn approaching drivers."
+    "The amber roadside beacon activates only when the AI detects "
+    "an ambulance in the uploaded image."
 )
 
-warning_active = st.toggle(
-    "Simulate a roadside hazard",
-    value=False,
-    key="roadside_warning_active"
-)
+# Use the result from your existing ambulance detection system.
+# ambulance_detected must be True only when an ambulance is detected.
+warning_active = ambulance_detected and confidence >= 60
 
 if warning_active:
     light_color = "#ffb000"
     animation = "blink 0.7s infinite"
-    status = "WARNING ACTIVE — SLOW DOWN"
+    status = "🚨 AMBULANCE DETECTED — WARNING ACTIVE"
 else:
     light_color = "#555b65"
     animation = "none"
-    status = "STANDBY — NO HAZARD SIMULATED"
+    status = "STANDBY — NO AMBULANCE DETECTED"
 
 components.html(
     f"""
-    <!DOCTYPE html>
     <html>
     <head>
     <style>
@@ -289,44 +287,44 @@ components.html(
         }}
         .scene {{
             background: #303844;
-            border-radius: 14px;
-            padding: 24px;
-            text-align: center;
             color: white;
+            text-align: center;
+            padding: 24px;
+            border-radius: 14px;
         }}
         .beacon {{
-            width: 38px;
-            height: 38px;
-            margin: 20px auto 0;
+            width: 42px;
+            height: 42px;
+            margin: 22px auto 0;
             border-radius: 50%;
             background: {light_color};
-            box-shadow: 0 0 20px {light_color};
+            box-shadow: 0 0 24px {light_color};
             animation: {animation};
-            border: 3px solid #fff0bd;
+            border: 3px solid #ffffff;
         }}
         .post {{
             width: 12px;
             height: 65px;
-            background: #d1d5db;
             margin: auto;
+            background: #d1d5db;
         }}
         .base {{
-            width: 66px;
+            width: 70px;
             height: 12px;
-            background: #9ca3af;
             margin: auto;
+            background: #9ca3af;
             border-radius: 3px;
         }}
         .road {{
             margin-top: 22px;
+            padding: 14px;
             border-top: 3px dashed white;
-            padding-top: 16px;
-            font-size: 25px;
+            font-size: 27px;
         }}
         .status {{
             margin-top: 18px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 17px;
         }}
         @keyframes blink {{
             0%, 100% {{ opacity: 1; }}
@@ -336,13 +334,13 @@ components.html(
     </head>
     <body>
         <div class="scene">
-            <div>ROADSIDE AMBER WARNING UNIT</div>
+            <div>PHYSICAL ROADSIDE AMBER BEACON</div>
             <div class="beacon"></div>
             <div class="post"></div>
             <div class="base"></div>
             <div class="road">🚗　🚙　🚕</div>
             <div class="status">{status}</div>
-            <p>PHYSICAL DEVICE CONCEPT — SIMULATED</p>
+            <p>AI-TRIGGERED SIMULATION</p>
         </div>
     </body>
     </html>
@@ -352,6 +350,10 @@ components.html(
 )
 
 st.caption(
+    "Simulation only. The beacon responds to the AI ambulance "
+    "detection result, not to stopped-car detection or physical hardware."
+)
+
     "This is a visual simulation only. A real implementation would "
     "require a roadside sensor, controller, and physical amber beacon."
 )
