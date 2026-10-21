@@ -110,6 +110,8 @@ if uploaded:
                     }
                 except Exception as exc:
                     st.error("Detection failed. Check your API key, workflow access, and package setup.")
+                    import traceback
+                    traceback.print_exc()
                     st.caption(f"Technical detail: {exc}")
 
         outcome = st.session_state.get("detection_result")
