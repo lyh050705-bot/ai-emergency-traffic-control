@@ -244,56 +244,100 @@ if uploaded:
               <p class="small">Run detection to update the simulated signal and warning.</p>
             </div>
             """, unsafe_allow_html=True)
-            # Physical roadside warning-light concept
-
-st.markdown("## Physical Roadside Warning-Light System")
-
-st.write(
-    "A roadside sensor detects a stopped vehicle or road hazard "
-    "and activates a flashing amber beacon to warn approaching drivers."
-)
-
-warning_active = st.toggle(
-    "Simulate roadside hazard detected",
-    value=False,
-    key="roadside_warning_active"
-)
-
-if warning_active:
-    beacon = '<span class="roadside-beacon"></span>'
-    status = "WARNING ACTIVE — SLOW DOWN"
-else:
-    beacon = (
-        '<span style="display:inline-block;width:32px;height:32px;'
-        'border-radius:50%;background:#6b7280;'
-        'border:3px solid #d1d5db;"></span>'
-    )
-    status = "STANDBY — NO HAZARD SIMULATED"
-
-st.markdown(f"""
-<div class="roadside-scene">
-    <h3>⚠️ ROADSIDE WARNING UNIT</h3>
-    <div style="margin-top:20px;">
-        {beacon}
-    </div>
-    <div class="roadside-post"></div>
-    <div class="roadside-base"></div>
-    <div class="roadside-lane"></div>
-    <div style="font-size:18px;font-weight:bold;">
-        {status}
-    </div>
-    <div style="margin-top:12px;font-size:12px;">
-        PHYSICAL DEVICE CONCEPT — SIMULATED
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.caption(
-    "Future implementation: connect a roadside sensor or "
-    "stopped-vehicle detection model to a physical amber beacon."
-)
 else:
     st.markdown("Upload an image to begin. For the best demo, use a clear road image with or without an ambulance.")
 
 st.divider()
 st.caption("AI Emergency Traffic Control · Hackathon prototype · Image-based inference only")
+# ---------------- PHYSICAL ROADSIDE WARNING LIGHT ----------------
+
+st.divider()
+st.subheader("🚨 Physical Roadside Warning-Light System")
+
+st.write(
+    "Concept: a roadside sensor detects a stopped vehicle or road hazard "
+    "and activates a flashing amber beacon to warn approaching drivers."
+)
+
+warning_active = st.toggle(
+    "Simulate a roadside hazard",
+    value=False,
+    key="roadside_warning_active"
+)
+
+if warning_active:
+    beacon_color = "#facc15"
+    status_text = "⚠️ WARNING ACTIVE — SLOW DOWN"
+    animation = "animation: roadside_flash 0.8s infinite;"
+else:
+    beacon_color = "#6b7280"
+    status_text = "STANDBY — NO HAZARD SIMULATED"
+    animation = ""
+
+st.markdown(
+    f"""
+    <style>
+    @keyframes roadside_flash {{
+        0%, 49% {{
+            background: #facc15;
+            box-shadow: 0 0 22px #facc15;
+            opacity: 1;
+        }}
+        50%, 100% {{
+            background: #78350f;
+            box-shadow: none;
+            opacity: 0.55;
+        }}
+    }}
+    </style>
+
+    <div style="
+        background:#303844;
+        color:white;
+        padding:24px;
+        border-radius:14px;
+        text-align:center;
+    ">
+        <h3 style="color:white;">ROADSIDE AMBER WARNING UNIT</h3>
+
+        <div style="
+            width:32px;
+            height:32px;
+            border-radius:50%;
+            background:{beacon_color};
+            border:3px solid #fef3c7;
+            margin:18px auto 0;
+            {animation}
+        "></div>
+
+        <div style="
+            width:12px;
+            height:55px;
+            background:#d1d5db;
+            margin:auto;
+        "></div>
+
+        <div style="
+            width:60px;
+            height:12px;
+            background:#9ca3af;
+            margin:auto;
+            border-radius:4px;
+        "></div>
+
+        <hr style="border:1px dashed white; margin-top:22px;">
+
+        <h4 style="color:white;">{status_text}</h4>
+
+        <div style="font-size:12px;">
+            PHYSICAL DEVICE CONCEPT — SIMULATED
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.caption(
+    "Future development: connect a roadside sensor or vehicle-detection "
+    "system to a real amber warning beacon."
+)
