@@ -52,6 +52,19 @@ input, textarea {
     color: #111827 !important;
     background-color: #ffffff !important;
 }
+/* Fix hero banner title and subtitle visibility */
+.hero, .hero h1, .hero h2, .hero h3, .hero p, .hero span {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Keep other headings visible on light backgrounds */
+h1, h2, h3, h4 {
+    color: #111827 !important;
+    -webkit-text-fill-color: #111827 !important;
+    opacity: 1 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
