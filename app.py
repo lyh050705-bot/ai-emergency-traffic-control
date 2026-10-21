@@ -13,6 +13,78 @@ st.set_page_config(
     layout="wide"
 )
 
+st.markdown("""
+<style>
+/* Futuristic emergency-control background */
+.stApp {
+    background:
+        radial-gradient(
+            circle at 10% 0%,
+            rgba(14, 116, 190, 0.22),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 95% 30%,
+            rgba(30, 64, 120, 0.20),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #06111f 0%,
+            #0b192b 50%,
+            #071426 100%
+        );
+    color: #f1f5f9;
+}
+
+/* Remove the solid header background */
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+/* Improve spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1200px;
+}
+
+/* Make headings brighter */
+h1, h2, h3 {
+    color: #f0f9ff !important;
+    letter-spacing: 0.3px;
+}
+
+/* Give content panels a clean glass-like look */
+div[data-testid="stFileUploader"],
+div[data-testid="stAlert"],
+div[data-testid="stExpander"] {
+    border-radius: 12px;
+}
+
+/* Style buttons */
+.stButton > button {
+    border-radius: 9px;
+    border: 1px solid #2586b8;
+    background: linear-gradient(135deg, #075985, #0369a1);
+    color: white;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover {
+    border-color: #7dd3fc;
+    color: white;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+/* Make the footer less distracting */
+footer {
+    visibility: hidden;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🚑 AI Emergency Traffic Control")
 st.write(
     "An AI prototype that detects ambulances and activates "
