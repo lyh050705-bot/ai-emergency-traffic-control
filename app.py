@@ -1,282 +1,194 @@
-import os
+
 import streamlit as st
-from PIL import Image
+import streamlit.components.v1 as components
 from inference_sdk import InferenceHTTPClient
+from PIL import Image, ImageDraw
+import os
+
+# ---------------- PAGE SETTINGS ----------------
 
 st.set_page_config(
     page_title="AI Emergency Traffic Control",
     page_icon="🚑",
-    layout="wide",
+    layout="wide"
 )
 
-st.markdown("""
-<style>
-.stApp { background: #f3f6fb; }
-.hero {
-    background: linear-gradient(120deg, #102a43, #176b87);
-    color: white; padding: 1.6rem 2rem; border-radius: 18px;
-    margin-bottom: 1rem;
-}
-.hero h1 { margin: 0; font-size: 2rem; }
-.hero p { margin: .4rem 0 0 0; color: #e1f4ff; }
-.panel {
-    background: white; padding: 1.2rem; border-radius: 16px;
-    border: 1px solid #dce5ef; min-height: 150px;
-}
-.small { color: #526579; font-size: .9rem; }
-/* Fix text visibility */
-html, body, [data-testid="stApp"], .stApp {
-    color: #1f2937 !important;
-}
+st.title("🚑 AI Emergency Traffic Control")
+st.write(
+    "An AI prototype that detects ambulances and activates "
+    "a simulated roadside warning beacon."
+)
 
-[data-testid="stMarkdownContainer"],
-[data-testid="stMarkdownContainer"] p,
-[data-testid="stMarkdownContainer"] li,
-[data-testid="stWidgetLabel"] p,
-[data-testid="stHeader"] {
-    color: #1f2937 !important;
-    opacity: 1 !important;
-}
+# ---------------- CONFIGURATION ----------------
 
-h1, h2, h3, h4, h5, h6 {
-    color: #111827 !important;
-    opacity: 1 !important;
-}
+WORKFLOW_ID = "general-segmentation-api"
+CONFIDENCE_THRESHOLD = 0.60
 
-[data-testid="stCaptionContainer"] {
-    color: #4b5563 !important;
-    opacity: 1 !important;
-}
+# Read the API key from Streamlit Secrets or an environment variable.
+try:
+    api_key = st.secrets.get("ROBOFLOW_API_KEY", "")
+except Exception:
+    api_key = ""
 
-input, textarea {
-    color: #111827 !important;
-    background-color: #ffffff !important;
-}
-/* Fix hero banner title and subtitle visibility */
-.hero, .hero h1, .hero h2, .hero h3, .hero p, .hero span {
-    color: #ffffff !important;
-    opacity: 1 !important;
-    -webkit-text-fill-color: #ffffff !important;
-}
+if not api_key:
+    api_key = os.environ.get("ROBOFLOW_API_KEY", "")
 
-/* Keep other headings visible on light backgrounds */
-h1, h2, h3, h4 {
-    color: #111827 !important;
-    -webkit-text-fill-color: #111827 !important;
-    opacity: 1 !important;
-}
-/* Physical roadside warning beacon */
-@keyframes roadside-flash {
-    0%, 49% {
-        background-color: #facc15;
-        box-shadow: 0 0 22px #facc15;
-        opacity: 1;
-    }
-    50%, 100% {
-        background-color: #78350f;
-        box-shadow: none;
-        opacity: 0.55;
-    }
-}
+if not api_key:
+    st.error(
+        "Roboflow API key not found. Add ROBOFLOW_API_KEY "
+        "in Streamlit Settings → Secrets."
+    )
+    st.stop()
 
-.roadside-beacon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 3px solid #fef3c7;
-    display: inline-block;
-    animation: roadside-flash 0.8s infinite;
-}
+client = InferenceHTTPClient(
+    api_url="https://serverless.roboflow.com",
+    api_key=api_key
+)
 
-.roadside-scene {
-    background: #303844;
-    color: #ffffff;
-    border-radius: 14px;
-    padding: 22px;
-    text-align: center;
-}
+# ---------------- IMAGE UPLOAD ----------------
 
-.roadside-scene h3,
-.roadside-scene p {
-    color: #ffffff !important;
-}
+st.subheader("📷 Ambulance Detection")
 
-.roadside-post {
-    width: 12px;
-    height: 55px;
-    background: #d1d5db;
-    margin: 8px auto;
-    border-radius: 3px;
-}
+uploaded_file = st.file_uploader(
+    "Upload a road image containing an ambulance",
+    type=["jpg", "jpeg", "png"]
+)
 
-.roadside-base {
-    width: 60px;
-    height: 12px;
-    background: #9ca3af;
-    margin: auto;
-    border-radius: 4px;
-}
+ambulance_detected = False
+best_confidence = 0.0
+annotated_image = None
+error_message = None
 
-.roadside-lane {
-    border-top: 3px dashed #f9fafb;
-    margin: 18px 0;
-}y
-</style>
-""", unsafe_allow_html=True)
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    annotated_image = image.copy()
 
-st.markdown("""
-<div class="hero">
-  <h1>🚑 AI Emergency Traffic Control</h1>
-  <p>Smart-city concept prototype · Upload an image to test ambulance detection</p>
-</div>
-""", unsafe_allow_html=True)
+    st.image(image, caption="Uploaded road image", use_container_width=True)
 
-with st.sidebar:
-    st.header("About this prototype")
-    st.write("This demo analyzes an uploaded image using a Roboflow workflow.")
-    st.info("Prototype only: it does not analyze live traffic or control real traffic signals.")
-    st.caption("Keep your Roboflow API key in Streamlit Secrets or an environment variable. Never paste it into public code.")
+    with st.spinner("AI is checking the image..."):
+        try:
+            # Ask the Roboflow workflow to look for ambulances.
+            results = client.run_workflow(
+                workspace_name="yong-han-lee",
+                workflow_id=WORKFLOW_ID,
+                images={"image": image},
+                parameters={"classes": "Ambulance"}
+            )
 
-api_key = st.secrets.get("ROBOFLOW_API_KEY", os.getenv("ROBOFLOW_API_KEY", ""))
-uploaded = st.file_uploader("Upload a road image", type=["jpg", "jpeg", "png", "webp"])
+            # Extract predictions from the workflow response.
+            predictions = []
 
-col_image, col_status = st.columns([1.05, 1])
+            if isinstance(results, list) and len(results) > 0:
+                first_result = results[0]
 
-if uploaded:
-    image = Image.open(uploaded).convert("RGB")
-    with col_image:
-        st.subheader("Uploaded road image")
-        st.image(image, use_container_width=True)
+                if isinstance(first_result, dict):
+                    prediction_data = first_result.get("predictions", {})
 
-    with col_status:
-        st.subheader("Detection results")
-        if not api_key:
-            st.error("API key not configured.")
-            st.markdown("""
-            To run the real AI model, add `ROBOFLOW_API_KEY` to your app's
-            **Streamlit Secrets**. See `README.md` for setup instructions.
-            """)
-        elif st.button("Run ambulance detection", type="primary", use_container_width=True):
-            with st.spinner("Analyzing image with the AI model..."):
-                try:
-                    client = InferenceHTTPClient(
-                            api_url="https://serverless.roboflow.com",
-                            api_key=api_key
-                            )
+                    if isinstance(prediction_data, dict):
+                        predictions = prediction_data.get("predictions", [])
+                    elif isinstance(prediction_data, list):
+                        predictions = prediction_data
 
-                    # Save uploaded bytes to a temporary file for the SDK.
-                    import tempfile
-                    suffix = "." + uploaded.name.rsplit(".", 1)[-1].lower()
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                        tmp.write(uploaded.getvalue())
-                        image_path = tmp.name
+            # Only accept the class Ambulance.
+            draw = ImageDraw.Draw(annotated_image)
 
-                    try:
-                        result = client.run_workflow(
-                            workspace_name="yong-han-lee",
-                            workflow_id="general-segmentation-api",
-                            images={"image": image_path},
-                            parameters={"classes": "Ambulance"},
-                            use_cache=True,
-                        )
-                    finally:
-                        try:
-                            os.remove(image_path)
-                        except OSError:
-                            pass
+            for prediction in predictions:
+                if not isinstance(prediction, dict):
+                    continue
 
-                    predictions = result[0]["predictions"]["predictions"]
-                    ambulance_predictions = [
-                        item for item in predictions
-                        if item.get("class") == "Ambulance"
-                    ]
+                class_name = str(
+                    prediction.get("class", prediction.get("class_name", ""))
+                ).strip().lower()
 
-                    if ambulance_predictions:
-                        best = max(ambulance_predictions, key=lambda item: item.get("confidence", 0))
-                        confidence = float(best.get("confidence", 0)) * 100
-                        detected = confidence >= 60
-                    else:
-                        confidence = 0.0
-                        detected = False
+                confidence = float(prediction.get("confidence", 0))
 
-                    st.session_state["detection_result"] = {
-                        "detected": detected,
-                        "confidence": confidence,
-                    }
-                except Exception as exc:
-                        st.error("Detection failed.")
-                        st.caption(f"Technical detail: {type(exc).__name__}: {exc}")
-                
-        outcome = st.session_state.get("detection_result")
-        if outcome:
-            detected = outcome["detected"]
-            confidence = outcome["confidence"]
-            if detected:
-                st.success("🚑 AMBULANCE DETECTED")
-                st.metric("Detection confidence", f"{confidence:.1f}%")
-                signal_color = "#20bf6b"
-                signal_text = "GREEN — emergency priority (simulated)"
-                warning_text = "GIVE WAY TO EMERGENCY VEHICLE"
-            else:
-                st.warning("No ambulance detected at the confidence threshold.")
-                st.metric("Detection confidence", f"{confidence:.1f}%")
-                signal_color = "#ef4444"
-                signal_text = "RED — normal operation (simulated)"
-                warning_text = "NO EMERGENCY DETECTED"
+                # Ignore cars, stopped vehicles and all other classes.
+                if class_name != "ambulance":
+                    continue
 
-            st.markdown(f"""
-            <div class="panel">
-              <h3>🚦 Simulated traffic signal</h3>
-              <div style="display:flex;align-items:center;gap:16px;">
-                <div style="background:#202833;padding:10px 14px;border-radius:24px;display:flex;gap:9px;">
-                  <span style="width:20px;height:20px;border-radius:50%;background:{'#ef4444' if not detected else '#454545'};display:inline-block"></span>
-                  <span style="width:20px;height:20px;border-radius:50%;background:#454545;display:inline-block"></span>
-                  <span style="width:20px;height:20px;border-radius:50%;background:{signal_color};display:inline-block"></span>
-                </div>
-                <div><b>{signal_text}</b><br><span class="small">{warning_text}</span></div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div class="panel">
-              <h3>🚦 Traffic signal preview</h3>
-              <p class="small">Run detection to update the simulated signal and warning.</p>
-            </div>
-            """, unsafe_allow_html=True)
-else:
-    st.markdown("Upload an image to begin. For the best demo, use a clear road image with or without an ambulance.")
+                if confidence < CONFIDENCE_THRESHOLD:
+                    continue
 
-st.divider()
-st.caption("AI Emergency Traffic Control · Hackathon prototype · Image-based inference only")
+                ambulance_detected = True
+                best_confidence = max(best_confidence, confidence)
 
-# ---------------- PHYSICAL ROADSIDE WARNING LIGHT ----------------
+                # Draw a box if the model supplies bounding-box coordinates.
+                if all(
+                    key in prediction
+                    for key in ["x", "y", "width", "height"]
+                ):
+                    x = float(prediction["x"])
+                    y = float(prediction["y"])
+                    w = float(prediction["width"])
+                    h = float(prediction["height"])
 
-import streamlit.components.v1 as components
+                    left = x - w / 2
+                    top = y - h / 2
+                    right = x + w / 2
+                    bottom = y + h / 2
+
+                    draw.rectangle(
+                        [left, top, right, bottom],
+                        outline="lime",
+                        width=4
+                    )
+                    draw.text(
+                        (left, max(0, top - 22)),
+                        f"AMBULANCE {confidence:.0%}",
+                        fill="lime",
+                        stroke_width=2,
+                        stroke_fill="black"
+                    )
+
+        except Exception as exc:
+            error_message = (
+                f"{type(exc).__name__}: {exc}"
+            )
+
+    if error_message:
+        st.error("The AI could not process this image.")
+        st.caption(error_message)
+
+    elif ambulance_detected:
+        st.success(
+            f"🚑 Ambulance detected! Confidence: {best_confidence:.1%}"
+        )
+        st.image(
+            annotated_image,
+            caption="AI detection result",
+            use_container_width=True
+        )
+
+    else:
+        st.info(
+            "No ambulance detected above the 60% confidence threshold. "
+            "The warning light remains OFF."
+        )
+
+# ---------------- ROADSIDE WARNING LIGHT ----------------
 
 st.divider()
 st.subheader("🚨 Physical Roadside Warning-Light System")
 
 st.write(
-    "The amber roadside beacon activates only when the AI detects "
-    "an ambulance in the uploaded image."
+    "When the AI detects an ambulance, a roadside amber beacon "
+    "is simulated as a warning to approaching drivers."
 )
 
-# Use the result from your existing ambulance detection system.
-# ambulance_detected must be True only when an ambulance is detected.
-warning_active = ambulance_detected and confidence >= 60
-
-if warning_active:
-    light_color = "#ffb000"
+if ambulance_detected:
+    light_colour = "#ffb000"
     animation = "blink 0.7s infinite"
-    status = "🚨 AMBULANCE DETECTED — WARNING ACTIVE"
+    status_text = "AMBULANCE DETECTED — WARNING LIGHT ACTIVE"
+    status_colour = "#ffcf40"
 else:
-    light_color = "#555b65"
+    light_colour = "#555b65"
     animation = "none"
-    status = "STANDBY — NO AMBULANCE DETECTED"
+    status_text = "STANDBY — WARNING LIGHT OFF"
+    status_colour = "#d1d5db"
 
 components.html(
     f"""
+    <!DOCTYPE html>
     <html>
     <head>
     <style>
@@ -285,62 +197,82 @@ components.html(
             font-family: Arial, sans-serif;
             background: transparent;
         }}
+
         .scene {{
-            background: #303844;
+            background: #252d38;
             color: white;
-            text-align: center;
-            padding: 24px;
             border-radius: 14px;
+            padding: 24px;
+            text-align: center;
         }}
+
+        .heading {{
+            font-size: 18px;
+            font-weight: bold;
+        }}
+
         .beacon {{
-            width: 42px;
-            height: 42px;
+            width: 48px;
+            height: 48px;
             margin: 22px auto 0;
             border-radius: 50%;
-            background: {light_color};
-            box-shadow: 0 0 24px {light_color};
+            background: {light_colour};
+            border: 3px solid #fff0bd;
+            box-shadow: 0 0 24px {light_colour};
             animation: {animation};
-            border: 3px solid #ffffff;
         }}
+
         .post {{
             width: 12px;
             height: 65px;
             margin: auto;
-            background: #d1d5db;
+            background: #cbd5e1;
         }}
+
         .base {{
-            width: 70px;
+            width: 72px;
             height: 12px;
             margin: auto;
-            background: #9ca3af;
             border-radius: 3px;
+            background: #94a3b8;
         }}
+
         .road {{
-            margin-top: 22px;
-            padding: 14px;
+            margin-top: 24px;
+            padding: 15px;
             border-top: 3px dashed white;
-            font-size: 27px;
+            font-size: 28px;
         }}
+
         .status {{
-            margin-top: 18px;
+            margin-top: 16px;
+            color: {status_colour};
+            font-size: 16px;
             font-weight: bold;
-            font-size: 17px;
         }}
+
+        .note {{
+            margin-top: 12px;
+            color: #cbd5e1;
+            font-size: 12px;
+        }}
+
         @keyframes blink {{
             0%, 100% {{ opacity: 1; }}
             50% {{ opacity: 0.2; }}
         }}
     </style>
     </head>
+
     <body>
         <div class="scene">
-            <div>PHYSICAL ROADSIDE AMBER BEACON</div>
+            <div class="heading">ROADSIDE AMBER WARNING UNIT</div>
             <div class="beacon"></div>
             <div class="post"></div>
             <div class="base"></div>
             <div class="road">🚗　🚙　🚕</div>
-            <div class="status">{status}</div>
-            <p>AI-TRIGGERED SIMULATION</p>
+            <div class="status">{status_text}</div>
+            <div class="note">SIMULATED DEVICE — NOT A REAL TRAFFIC SIGNAL</div>
         </div>
     </body>
     </html>
@@ -350,10 +282,13 @@ components.html(
 )
 
 st.caption(
-    "Simulation only. The beacon responds to the AI ambulance "
-    "detection result, not to stopped-car detection or physical hardware."
+    "This is a visual simulation only. A real implementation would "
+    "require a roadside sensor or camera, a controller, and a physical "
+    "amber beacon."
 )
 
-    "This is a visual simulation only. A real implementation would "
-    "require a roadside sensor, controller, and physical amber beacon."
+st.divider()
+st.caption(
+    "AI Emergency Traffic Control · Hackathon prototype · "
+    "Image-based inference only"
 )
