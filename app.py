@@ -266,66 +266,40 @@ warning_active = st.toggle(
 )
 
 if warning_active:
-    beacon_color = "#facc15"
-    status_text = "⚠️ WARNING ACTIVE — SLOW DOWN"
-    animation = "animation: roadside_flash 0.8s infinite;"
+    light_style = """
+        background:#facc15;
+        animation: roadside_flash 0.8s infinite;
+        box-shadow:0 0 22px #facc15;
+    """
+    status_text = "WARNING ACTIVE — SLOW DOWN"
 else:
-    beacon_color = "#6b7280"
+    light_style = "background:#6b7280;"
     status_text = "STANDBY — NO HAZARD SIMULATED"
-    animation = ""
 
 st.markdown(
     f"""
     <style>
     @keyframes roadside_flash {{
-        0%, 49% {{
-            background: #facc15;
-            box-shadow: 0 0 22px #facc15;
-            opacity: 1;
-        }}
-        50%, 100% {{
-            background: #78350f;
-            box-shadow: none;
-            opacity: 0.55;
-        }}
+        0%, 49% {{ background:#facc15; box-shadow:0 0 22px #facc15; }}
+        50%, 100% {{ background:#78350f; box-shadow:none; }}
     }}
     </style>
 
-    <div style="
-        background:#303844;
-        color:white;
-        padding:24px;
-        border-radius:14px;
-        text-align:center;
-    ">
+    <div style="background:#303844;color:white;padding:24px;
+                border-radius:14px;text-align:center;">
         <h3 style="color:white;">ROADSIDE AMBER WARNING UNIT</h3>
 
-        <div style="
-            width:32px;
-            height:32px;
-            border-radius:50%;
-            background:{beacon_color};
-            border:3px solid #fef3c7;
-            margin:18px auto 0;
-            {animation}
-        "></div>
+        <div style="width:32px;height:32px;border-radius:50%;
+                    border:3px solid #fef3c7;margin:18px auto 0;
+                    {light_style}"></div>
 
-        <div style="
-            width:12px;
-            height:55px;
-            background:#d1d5db;
-            margin:auto;
-        "></div>
+        <div style="width:12px;height:55px;background:#d1d5db;
+                    margin:auto;"></div>
 
-        <div style="
-            width:60px;
-            height:12px;
-            background:#9ca3af;
-            margin:auto;
-            border-radius:4px;
-        "></div>
+        <div style="width:60px;height:12px;background:#9ca3af;
+                    margin:auto;border-radius:4px;"></div>
 
-        <hr style="border:1px dashed white; margin-top:22px;">
+        <hr style="border:1px dashed white;margin-top:22px;">
 
         <h4 style="color:white;">{status_text}</h4>
 
