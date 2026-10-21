@@ -63,11 +63,9 @@ if uploaded:
             with st.spinner("Analyzing image with the AI model..."):
                 try:
                     client = InferenceHTTPClient(
-                        api_url="https://serverless.roboflow.com",
-                        api_key=api_key,
-                    ).configure(
-                        InferenceConfiguration(api_key_transport="header")
-                    )
+                            api_url="https://serverless.roboflow.com",
+                            api_key=api_key
+                            )
 
                     # Save uploaded bytes to a temporary file for the SDK.
                     import tempfile
