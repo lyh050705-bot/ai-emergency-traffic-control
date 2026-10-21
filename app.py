@@ -106,12 +106,10 @@ if uploaded:
                         "detected": detected,
                         "confidence": confidence,
                     }
-                except Exception as e:
-                    st.error(f"Detection failed: {type(e).__name__}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    st.caption(f"Technical detail: {exc}")
-
+                except Exception as exc:
+                        st.error("Detection failed.")
+                        st.caption(f"Technical detail: {type(exc).__name__}: {exc}")
+                
         outcome = st.session_state.get("detection_result")
         if outcome:
             detected = outcome["detected"]
